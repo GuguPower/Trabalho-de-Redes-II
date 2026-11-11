@@ -1,44 +1,54 @@
-# Exercício 6 – Estabelecimento e Encerramento de Conexão TCP
+# Exercício 6 - Estabelecimento e Encerramento de Conexão TCP
 
-**Participante**: Gustavo Henrique Ferreira de Oliveira
+Análise do estabelecimento e encerramento de uma conexão TCP utilizando o Wireshark, identificando o handshake de três vias e a troca de segmentos responsável pelo encerramento da comunicação.
 
-## 1. Objetivo
+**Participante:** Gustavo Henrique Ferreira de Oliveira
 
-Analisar o processo de estabelecimento e encerramento de uma conexão TCP, identificando os pacotes responsáveis pelo three-way handshake e pela finalização da comunicação entre cliente e servidor.
+## Arquivos deste diretório
 
-## 2. Procedimentos realizados
+| Arquivo | Descrição |
+| ------------------- | ---------------------------------------- |
+| `exercicio6.pcapng` | Captura do Wireshark com os pacotes TCP |
+| `README.md` | Este arquivo |
 
-Foi iniciada uma captura de tráfego utilizando o Wireshark. Em seguida, por meio do terminal WSL, foi estabelecida uma conexão com o servidor `example.com`, utilizando Telnet na porta 80. Após o estabelecimento da conexão, foi enviada uma requisição HTTP GET para solicitar a página inicial do servidor.
 
-## 3. Estabelecimento da conexão TCP
+## Como reproduzir
 
-O estabelecimento da conexão foi identificado por meio do three-way handshake, composto por três pacotes:
+1. Abrir o Wireshark e iniciar a captura na interface de rede em uso.
+2. Executar o comando `telnet example.com 80` para estabelecer uma conexão com o servidor.
+3. Após a conexão, enviar uma requisição HTTP digitando:
+   
+   `GET / HTTP/1.1`
 
-| Número do pacote | Flag TCP | Descrição |
-|---|---|---|
-| 605 | SYN | Cliente solicita o estabelecimento da conexão. |
-| 606 | SYN, ACK | Servidor confirma o recebimento da solicitação. |
-| 607 | ACK | Cliente confirma a resposta do servidor. |
+   `Host: example.com`
 
-Essa sequência demonstra que a conexão TCP foi estabelecida com sucesso entre o cliente (`192.168.15.17`) e o servidor (`172.66.147.243`).
+   `Connection: close`
 
-## 4. Encerramento da conexão TCP
+   Pressionar Enter duas vezes para finalizar a requisição.
+4. Parar a captura e aplicar o filtro `tcp.port == 80`.
+5. Identificar os pacotes responsáveis pelo estabelecimento e encerramento da conexão.
+6. Salvar a captura em formato `.pcapng`.
 
-O encerramento da conexão foi identificado nos pacotes 777 a 781, por meio das flags FIN e ACK. O servidor iniciou o encerramento enviando um pacote FIN, ACK, que foi confirmado pelo cliente. Em seguida, o cliente também enviou um FIN, ACK, recebendo a confirmação final do servidor.
+## O que foi observado
 
-| Número do pacote | Flag TCP | Descrição |
-|---|---|---|
-| 777 | FIN, ACK | Servidor inicia o encerramento da conexão. |
-| 778 | ACK | Cliente confirma o recebimento. |
-| 780 | FIN, ACK | Cliente inicia o encerramento da sua parte. |
-| 781 | ACK | Servidor confirma o encerramento. |
+Foi analisada uma conexão TCP entre o cliente `192.168.15.17` e o servidor `172.66.147.243`, utilizando a porta 80. O estabelecimento ocorreu por meio do handshake de três vias (SYN, SYN/ACK e ACK). No encerramento, foram identificados segmentos FIN/ACK e ACK, demonstrando a finalização da conexão TCP.
 
-O pacote 779 também apresenta uma confirmação ACK adicional durante esse processo.
+## Estabelecimento da conexão TCP
 
-## 5. Observações
+| Etapa | Pacote | Origem | Destino | Descrição |
+| ------------------- | ------- | ---------------- | ---------------- | ---------------------------------------- |
+| SYN | 605 | `192.168.15.17` | `172.66.147.243` | Cliente solicita o início da conexão. |
+| SYN/ACK | 606 | `172.66.147.243` | `192.168.15.17` | Servidor aceita a conexão e responde. |
+| ACK | 607 | `192.168.15.17` | `172.66.147.243` | Cliente confirma o recebimento. |
 
-Durante a captura, também foi identificado um pacote RST, ACK (pacote 551), indicando uma tentativa anterior de encerramento abrupto de conexão. Entretanto, a sequência principal analisada demonstra o encerramento normal por meio de FIN e ACK.
+## Encerramento da conexão TCP
 
-## 6. Arquivo
+| Etapa | Pacote | Origem | Destino | Descrição |
+| ------------------- | ------- | ---------------- | ---------------- | ---------------------------------------- |
+| FIN/ACK | 777 | `172.66.147.243` | `192.168.15.17` | Servidor inicia o encerramento. |
+| ACK | 778 | `192.168.15.17` | `172.66.147.243` | Cliente confirma o recebimento. |
+| FIN/ACK | 780 | `192.168.15.17` | `172.66.147.243` | Cliente solicita o encerramento de sua direção da conexão. |
+| ACK | 781 | `172.66.147.243` | `192.168.15.17` | Servidor confirma o encerramento. |
 
-- `exercicio6.pcapng`: arquivo contendo a captura do tráfego de rede.
+Também foi observado um pacote RST/ACK no pacote 551, referente a outra comunicação. Ele não faz parte da sequência principal de encerramento apresentada na tabela.
+

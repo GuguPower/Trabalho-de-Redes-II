@@ -1,27 +1,41 @@
-# Exercício 7 – Análise de Consultas DNS com Wireshark
+# Exercício 7 - Análise de Consultas DNS
 
-**Participante**: Gustavo Henrique Ferreira de Oliveira
+Análise de consultas DNS utilizando o Wireshark, identificando as solicitações de resolução de nomes e as respostas contendo os endereços IPv4 e IPv6 associados ao domínio consultado.
 
-## 1. Objetivo
-Analisar o processo de resolução de nomes por meio do protocolo DNS, identificando os tipos de registros solicitados, o servidor DNS utilizado e os endereços retornados nas respostas.
+**Participante:** Gustavo Henrique Ferreira de Oliveira
 
-## 2. Procedimentos realizados
-Foi realizada uma captura de tráfego utilizando o Wireshark durante o acesso ao endereço `http://httpforever.com/`. Após a captura, foi aplicado o filtro `dns` para visualizar as consultas e respostas relacionadas à resolução do domínio.
+## Arquivos deste diretório
 
-## 3. Análise dos pacotes
-Foram identificadas consultas DNS dos tipos **A** e **AAAA**, utilizadas para obter, respectivamente, os endereços IPv4 e IPv6 associados ao domínio `httpforever.com`.
+| Arquivo | Descrição |
+| ------------------- | ---------------------------------------- |
+| `exercicio7.pcapng` | Captura do Wireshark com os pacotes DNS |
+| `README.md` | Este arquivo |
 
-O servidor DNS identificado na comunicação com o computador foi `192.168.15.1`. As respostas retornaram os seguintes endereços:
 
-| Campo | Valor |
-|---|---|
-| Domínio consultado | httpforever.com |
-| Tipos de registros | A e AAAA |
-| Servidor DNS | 192.168.15.1 |
-| Endereços IPv4 | 172.67.132.115 e 104.21.4.210 |
-| Endereços IPv6 | 2606:4700:3031::6815:4d2 e 2606:4700:3036::ac43:8473 |
+## Como reproduzir
 
-Os pacotes 300 e 301 representam as consultas DNS, enquanto os pacotes 332 e 333 apresentam as respostas com os endereços IPv4. As respostas referentes aos endereços IPv6 podem ser observadas nos pacotes 326 e 327.
+1. Abrir o Wireshark e iniciar a captura na interface de rede em uso.
+2. Acessar o domínio `httpforever.com` para gerar consultas DNS.
+3. Parar a captura e aplicar o filtro `dns` na barra de filtros.
+4. Identificar as consultas do tipo A e AAAA e suas respectivas respostas.
+5. Expandir os detalhes dos pacotes para visualizar os endereços retornados pelo servidor DNS.
+6. Salvar a captura em formato `.pcapng`.
 
-## 4. Arquivos
-- `exercicio7.pcapng`: arquivo contendo a captura do tráfego de rede.
+## O que foi observado
+
+Foram identificadas consultas DNS para o domínio `httpforever.com`, solicitando seus endereços IPv4 (A) e IPv6 (AAAA). As respostas apresentaram dois endereços IPv4 e dois endereços IPv6 associados ao domínio. A comunicação envolveu o cliente `192.168.15.17` e o resolvedor DNS `192.168.15.1`.
+
+## Resumo das consultas DNS
+
+| Pacote | Tipo de consulta | Domínio consultado |
+| ------- | ---------------- | ------------------ |
+| 300 | A | `httpforever.com` |
+| 301 | AAAA | `httpforever.com` |
+
+## Resumo dos endereços retornados
+
+| Tipo | Pacotes de resposta | Endereços retornados |
+| ---------------- | ------------------ | ------------------- |
+| A (IPv4) | 332 e 333 | `172.67.132.115` e `104.21.4.210` |
+| AAAA (IPv6) | 326 e 327 | `2606:4700:3031::6815:4d2` e `2606:4700:3036::ac43:8473` |
+

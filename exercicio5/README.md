@@ -1,36 +1,39 @@
-# Exercício 5 – Análise de Tráfego HTTP com Wireshark
+# Exercício 5 - Análise de Tráfego HTTP
+
+Análise de uma comunicação HTTP utilizando o Wireshark, identificando a requisição enviada pelo cliente e a resposta recebida do servidor, incluindo o método HTTP, o código de status e os cabeçalhos da resposta.
 
 **Participante:** Gustavo Henrique Ferreira de Oliveira
 
-## 1. Objetivo
+## Arquivos deste diretório
 
-Analisar o tráfego HTTP capturado pelo Wireshark, identificando o método de requisição, a URL acessada, o código de status da resposta e os cabeçalhos HTTP.
+| Arquivo | Descrição |
+| ------------------- | ---------------------------------------- |
+| `exercicio.pcapng` | Captura do Wireshark com os pacotes HTTP |
+| `README.md` | Este arquivo |
 
-## 2. Procedimentos realizados
 
-Foi realizada uma captura de tráfego utilizando o Wireshark durante o acesso a uma página web. Após a captura, foi aplicado o filtro `http` para visualizar as comunicações realizadas pelo protocolo HTTP e identificar as requisições e respostas do servidor.
+## Como reproduzir
 
-## 3. Análise dos pacotes
+1. Abrir o Wireshark e iniciar a captura na interface de rede em uso.
+2. Acessar a página HTTP utilizada no teste para gerar tráfego.
+3. Parar a captura e aplicar o filtro `http` na barra de filtros.
+4. Localizar a requisição HTTP enviada pelo cliente e a resposta correspondente do servidor.
+5. Expandir os detalhes dos pacotes para visualizar o método, o código de status e os cabeçalhos HTTP.
+6. Salvar a captura em formato `.pcapng`.
 
-Foram identificadas requisições HTTP do tipo **GET**, utilizadas para solicitar a página inicial e arquivos complementares, como CSS e JavaScript. A resposta do servidor apresentou o código **200 OK**, indicando que a solicitação foi processada com sucesso.
+## O que foi observado
 
-Os principais campos identificados foram:
+Foi identificada uma requisição HTTP do tipo GET, enviada pelo cliente `192.168.15.17` ao servidor `104.21.4.210`, solicitando o recurso `/`. O servidor respondeu com o código `200 OK`, indicando sucesso na requisição. A resposta apresentou o tipo de conteúdo `text/html` e o servidor foi identificado como `cloudflare`.
 
-| Campo | Valor |
-|---|---|
-| Método HTTP | GET |
-| URL acessada | `/` |
-| Código de status | 200 OK |
-| Content-Type | text/html |
-| Server | cloudflare |
+## Resumo da comunicação HTTP
 
-Também foram observadas respostas com código **304 Not Modified**, relacionadas ao aproveitamento de arquivos armazenados no cache do navegador.
+| Informação | Valor |
+| ------------------- | ------------------- |
+| Método HTTP | `GET` |
+| Recurso solicitado | `/` |
+| IP de origem | `192.168.15.17` |
+| IP de destino | `104.21.4.210` |
+| Código de status | `200 OK` |
+| Content-Type | `text/html` |
+| Server | `cloudflare` |
 
-## 4. Evidências
-
-A captura de tela dentro do repositório apresenta os pacotes HTTP identificados e os cabeçalhos da resposta do servidor.
-
-## 5. Arquivos
-
-- `exercicio.pcapng`: arquivo contendo a captura do tráfego de rede.
-- `captura.png`: evidência visual da análise realizada.
