@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<!--
+  Exercício 10 - Cliente de chat com WebSockets em HTML + JavaScript
+  (usa a WebSocket API nativa do navegador).
+
+  Participantes do grupo:
+    - Nome do Aluno 1
+    - Nome do Aluno 2
+    - Nome do Aluno 3
+
+  Uso: inicie o servidor (servidor_ws.py) e abra este arquivo no navegador.
+-->
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chat WebSocket</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { font-size: 1.3rem; }
+    .linha { display: flex; gap: .5rem; margin-bottom: .5rem; }
+    .linha input { flex: 1; padding: .5rem; }
+    button { padding: .5rem 1rem; cursor: pointer; }
+    #mensagens { height: 320px; overflow-y: auto; border: 1px solid #999; border-radius: 6px;
+                 padding: .5rem; margin-bottom: .5rem; background: #fafafa; }
+    #mensagens div { margin: .2rem 0; }
+    .sistema { color: #666; font-style: italic; }
+    .erro { color: #b00020; }
+    .minha { color: #0b5cad; }
+    #status { font-size: .9rem; color: #555; margin-bottom: .5rem; }
+  </style>
+</head>
+<body>
+  <h1>Chat WebSocket</h1>
+
+  <!-- Tela de conexão -->
+  <div id="telaEntrada">
+    <div class="linha">
+      <input id="servidor" placeholder="Servidor (host:porta)" aria-label="Servidor">
+    </div>
+    <div class="linha">
+      <input id="nome" placeholder="Seu nome de usuário" maxlength="20" aria-label="Nome de usuário">
+      <button id="btnEntrar">Entrar</button>
+    </div>
+    <div id="erroEntrada" class="erro"></div>
+  </div>
+
+  <!-- Tela do chat -->
+  <div id="telaChat" hidden>
+    <div id="status"></div>
+    <div id="mensagens" aria-live="polite"></div>
+    <div class="linha">
+      <input id="texto" placeholder="Digite uma mensagem" maxlength="500" aria-label="Mensagem">
+      <button id="btnEnviar">Enviar</button>
+      <button id="btnSair">Sair</button>
+    </div>
+  </div>
+
+  <script>
+    // Endereço padrão: mesmo host da página (ou localhost se aberta como arquivo) na porta 8765
+    const hostPadrao = (location.hostname || "localhost") + ":8765";
+    const $ = (id) => document.getElementById(id);
+    $("servidor").value = hostPadrao;
+
+    let ws = null;          // conexão WebSocket atual
+    let nomeUsuario = "";   // nome aceito pelo servidor
+    let saiuPorConta = false;
+
+    // Adiciona uma linha à área de mensagens (textContent evita injeção de HTML)
+    function adicionar(texto, classe) {
+      const div = document.createElement("div");
+      if (classe) div.className = classe;
+      div.textContent = texto;
+      $("mensagens").appendChild(div);
+      $("mensagens").scrollTop = $("mensagens").scrollHeight;
+    }
+
+    function mostrarChat(visivel) {
+      $("telaEntrada").hidden = visivel;
+      $("telaChat").hidden = !visivel;
+      if (visivel) $("texto").focus();
+    }
+
+    function entrar() {
+      const servidor = $("servidor").value.trim();
+      const nome = $("nome").value.trim();
+      $("erroEntrada").textContent = "";
+
+      if (!servidor || !nome) {
+        $("erroEntrada").textContent = "Informe o servidor e o nome de usuário.";
+        return;
+      }
+
+      saiuPorConta = false;
+      try {
+        ws = new WebSocket("ws://" + servidor);
+      } catch (e) {
+        $("erroEntrada").textContent = "Endereço do servidor inválido.";
+        return;
+      }
+
+      // Ao abrir a conexão, envia o nome de usuário
+      ws.onopen = () => ws.send(JSON.stringify({ tipo: "entrar", nome: nome }));
+
+      ws.onmessage = (evento) => {
+        let dados;
+        try { dados = JSON.parse(evento.data); } catch (e) { return; }
+
+        if (dados.tipo === "ok") {                 // nome aceito
+          nomeUsuario = nome;
+          $("mensagens").innerHTML = "";
+          $("status").textContent = "Conectado como " + nomeUsuario;
+          mostrarChat(true);
+        } else if (dados.tipo === "erro") {
+          if ($("telaChat").hidden) {              // erro durante a entrada (nome recusado)
+            $("erroEntrada").textContent = dados.texto;
+          } else {
+            adicionar("[erro] " + dados.texto, "erro");
+          }
+        } else if (dados.tipo === "sistema") {
+          adicionar("*** " + dados.texto + " ***", "sistema");
+        } else if (dados.tipo === "mensagem") {
+          adicionar("[" + dados.hora + "] " + dados.nome + ": " + dados.texto);
+        }
+      };
+
+      ws.onerror = () => {
+        if ($("telaChat").hidden) {
+          $("erroEntrada").textContent = "Não foi possível conectar ao servidor " + servidor + ".";
+        }
+      };
+
+      // Desconexão (inclusive inesperada): volta à tela inicial
+      ws.onclose = () => {
+        if (!$("telaChat").hidden) {
+          adicionar(saiuPorConta ? "Você saiu do chat." : "Conexão encerrada pelo servidor.", "sistema");
+          $("status").textContent = "Desconectado";
+          setTimeout(() => mostrarChat(false), 1500);
+        }
+        ws = null;
+      };
+    }
+
+    function enviar() {
+      const texto = $("texto").value.trim();
+      if (!texto) return;                          // validação de mensagem vazia
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        adicionar("[erro] Sem conexão com o servidor.", "erro");
+        return;
+      }
+      ws.send(JSON.stringify({ tipo: "mensagem", texto: texto }));
+      adicionar("Você: " + texto, "minha");        // o servidor não devolve ao remetente
+      $("texto").value = "";
+    }
+
+    function sair() {
+      saiuPorConta = true;
+      if (ws) ws.close();
+    }
+
+    $("btnEntrar").addEventListener("click", entrar);
+    $("nome").addEventListener("keydown", (e) => { if (e.key === "Enter") entrar(); });
+    $("btnEnviar").addEventListener("click", enviar);
+    $("texto").addEventListener("keydown", (e) => { if (e.key === "Enter") enviar(); });
+    $("btnSair").addEventListener("click", sair);
+  </script>
+</body>
+</html>
